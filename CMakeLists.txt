@@ -6,10 +6,6 @@ option(PLIST_BUILD_TESTS "Build and run tests" OFF)
 # Disable exceptions in pugixml
 set(BUILD_DEFINES "-DPUGIXML_NO_EXCEPTIONS=1")
 
-add_subdirectory(third-party/pugixml/scripts)
-add_subdirectory(third-party/NSPlist)
-
-include_directories(third-party third-party/pugixml/src third-party/NSPlist/src)
 IF(MSVC)
 	include_directories(${CMAKE_SOURCE_DIR}/Windows/include)
 ENDIF()
@@ -18,7 +14,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_CXX_FLAGS} -Wall -DTEST_VERBOSE")
 
-add_library(PlistCpp src/Plist.cpp src/PlistDate.cpp)
+add_library(PlistCpp SHARED
+           src/Plist.cpp src/PlistDate.cpp)
+
+find_package(Boost REQUIRED)
+target_link_libraries( PlistCpp ${Boost_PROGRAM_OPTIONS_LIBRARY} )
+target_link_libraries( PlistCpp pugixml )
+target_link_libraries( PlistCpp NSPlist )
+
+install(TARGETS PlistCpp
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+install(DIRECTORY src/ DESTINATION include
+        FILES_MATCHING PATTERN "*.hpp")
 
 IF(PLIST_BUILD_TESTS)
 	add_subdirectory(third-party/unittest-cpp)
